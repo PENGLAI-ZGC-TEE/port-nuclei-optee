@@ -1,0 +1,26 @@
+[submodule "buildroot"]
+    path = buildroot
+
+[submodule "linux"]
+    path = linux
+
+[submodule "opensbi"]
+    path = opensbi
+
+[submodule "optee/optee_benchmark"]
+	path = optee/optee_benchmark
+
+[submodule "optee/optee_client"]
+	path = optee/optee_client
+
+[submodule "optee/optee_examples"]
+	path = optee/optee_examples	
+
+[submodule "optee/optee_os"]
+	path = optee/optee_os
+
+[submodule "optee/optee_test"]
+	path = optee/optee_test
+
+[submodule "qemu"]
+	path = qemu

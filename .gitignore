@@ -1,0 +1,13 @@
+.vscode
+work/*
+toolchain*
+buildroot/dl
+*.tar
+*.tar.gz
+*.tar.xz
+*.zip
+*.elf
+*.o
+*.bin
+*.log
+nuclei_toolchain/
