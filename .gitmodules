@@ -2,7 +2,9 @@
     path = buildroot
 
 [submodule "linux"]
-    path = linux
+	path = linux
+	url = git@github.com:Nuclei-Software/linux.git
+	branch = feature/optee_5.10
 
 [submodule "opensbi"]
     path = opensbi
