@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/* Copyright (c) 2023-2024 BOSC */
+
+/dts-v1/;
+
+#ifndef TIMERCLK_FREQ
+#define TIMERCLK_FREQ       1000000   //rtc is 1M
+#endif
+#ifndef CPUCLK_FREQ
+#define CPUCLK_FREQ         1000000
+#endif
+#ifndef PERIPHCLK_FREQ
+#define PERIPHCLK_FREQ      10000000
+#endif
+
+/{
+	#address-cells = <2>;
+	#size-cells = <2>;
+	compatible = "bosc,xiangshansoc";
+	model = "bosc,xiangshansoc";
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		timebase-frequency = <TIMERCLK_FREQ>;
+
+		cpu0: cpu@0 {
+      		device_type = "cpu";
+			clock-frequency = <CPUCLK_FREQ>;
+			compatible = "riscv";
+			d-cache-block-size = <64>;
+			d-cache-sets = <64>;
+			d-cache-size = <16384>;
+			d-tlb-sets = <1>;
+			d-tlb-size = <32>;
+			i-cache-block-size = <64>;
+			i-cache-sets = <64>;
+			i-cache-size = <16384>;
+			i-tlb-sets = <1>;
+			i-tlb-size = <32>;
+      		tlb-split;
+			mmu-type = "riscv,sv39";
+			next-level-cache = <&memory>;
+			reg = <0x0>;
+			riscv,isa = "rv64imafdcb";
+			status = "okay";
+
+			cpu0_intc: interrupt-controller {
+				#interrupt-cells = <1>;
+				compatible = "riscv,cpu-intc";
+				interrupt-controller;
+			};
+		};
+	};
+
+	chosen {
+    	bootargs = "earlycon=sbi console=ttyS0,115200";
+		stdout-path = "/soc/serial@310B0000";
+	};
+
+	soc {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		compatible = "bosc,xiangshansoc", "simple-bus";
+		ranges;
+		
+		hfclk: hfclk {
+    		#clock-cells = <0>;
+    		compatible = "fixed-clock";
+    		clock-frequency = <PERIPHCLK_FREQ>;
+    		clock-output-names = "hfclk";
+  		};
+
+		debug_controller0: debug-controller@0 {
+                        compatible = "sifive,debug-013", "riscv,debug-013";
+                        interrupts-extended = <&cpu0_intc 65535>;
+                        reg = <0x0 0x0 0x0 0x1000>;
+                        reg-names = "control";
+        };
+		
+		clint0: clint@38000000 {
+			compatible = "sifive,clint0", "riscv,clint0";
+			interrupts-extended = <&cpu0_intc 3 &cpu0_intc 7>;
+			reg = <0x0 0x38000000 0x0 0x10000>;
+			clocks = <&hfclk>;
+		};
+
+		PLIC: interrupt-controller@3c000000 {
+			#interrupt-cells = <1>;
+			compatible = "riscv,plic0";
+			interrupt-controller;
+			interrupts-extended = <&cpu0_intc 0xb &cpu0_intc 0x9>;
+			reg = <0 0x3c000000 0 0x4000000>;
+			riscv,max-priority = <7>;
+			riscv,ndev = <64>;
+		};
+
+		uart0: serial@310B0000 {
+			compatible = "ns16550a";
+			reg = <0x0 0x310B0000 0x0 0x10000>;
+			reg-shift = <0x02>;
+			reg-io-width = <0x04>;
+			interrupt-parent = <&PLIC>;
+			interrupts = <40>;
+			clocks = <&hfclk>;
+			clock-frequency = <PERIPHCLK_FREQ>;
+			status = "okay";
+		};
+	};
+
+	memory: memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x81000000 0x0 0xFF000000>;
+	};
+  
+	firmware {
+    	optee {
+      		compatible = "linaro,optee-tz";
+      		method = "smc";
+    	};
+	};
+};
