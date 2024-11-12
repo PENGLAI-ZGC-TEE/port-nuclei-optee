@@ -38,6 +38,17 @@ platform_dts := $(confdir)/bosc_$(ISA).dts
 platform_preproc_dts := $(wrkdir)/bosc_$(ISA).dts.preprocessed
 platform_dtb := $(wrkdir)/bosc_$(ISA).dtb
 
+## OpenSBI
+opensbi_srcdir := $(srcdir)/opensbi
+opensbi_wrkdir := $(wrkdir)/opensbi
+opensbi_plat_confdir := $(confdir)/opensbi
+opensbi_plat_srcdir := $(srcdir)/opensbi/platform/bosc/$(SOC)
+opensbi_payload := $(opensbi_wrkdir)/platform/bosc/$(SOC)/firmware/fw_payload.elf
+opensbi_dynamic := $(opensbi_wrkdir)/platform/bosc/$(SOC)/firmware/fw_dynamic.elf
+opensbi_jumpbin := $(opensbi_wrkdir)/platform/bosc/$(SOC)/firmware/fw_jump.bin
+opensbi_jumpelf := $(opensbi_wrkdir)/platform/bosc/$(SOC)/firmware/fw_jump.elf
+opensbi_plat_deps := $(wildcard $(addprefix $(opensbi_plat_confdir)/, *.mk *.c *.h))
+
 #############
 # Toolchain #
 #############
@@ -109,9 +120,27 @@ $(platform_preproc_dts): gen-dts
 $(platform_dtb) : $(platform_preproc_dts) $(target_gcc)
 	dtc -O dtb -o $(platform_dtb) $(platform_preproc_dts)
 
-.PHONY: clean-toolchain cleanlinux
+###########
+# OpenSBI #
+###########
+.PHONY: opensbi
+
+opensbi: $(target_gcc) $(opensbi_plat_deps)
+	mkdir -p $(opensbi_plat_srcdir)
+	cp -u $(opensbi_plat_confdir)/* $(opensbi_plat_srcdir)
+	$(MAKE) -C $(opensbi_srcdir) O=$(opensbi_wrkdir) CROSS_COMPILE=$(CROSS_COMPILE) PLATFORM_RISCV_ABI=$(ABI) PLATFORM_RISCV_ISA=$(ISA) PLATFORM=bosc/$(SOC) -j $(NPROC)
+
+$(opensbi_jumpbin): opensbi
+
+#########
+# clean #
+#########
+.PHONY: clean-toolchain cleanlinux cleanopensbi
 clean-toolchain:
 	rm -rf $(toolchain_srcdir)
 	
 cleanlinux:
 	rm -rf $(linux_wrkdir)
+	
+cleanopensbi:
+	rm -rf $(opensbi_wrkdir)
