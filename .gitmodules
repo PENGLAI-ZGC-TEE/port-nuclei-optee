@@ -7,7 +7,9 @@
 	branch = feature/optee_5.10
 
 [submodule "opensbi"]
-    path = opensbi
+	path = opensbi
+	url = git@github.com:PENGLAI-ZGC-TEE/port_nuclei_opensbi.git
+	branch = port_nanhu
 
 [submodule "optee/optee_benchmark"]
 	path = optee/optee_benchmark
